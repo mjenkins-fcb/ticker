@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Meta tags and title -->
+    <meta charset="UTF-8" />
+    <meta
+      name="description"
+      content="Unite Students - Email Ticker Generator"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unite Students - Email Ticker Generator</title>
+    <!-- Include Google Fonts for better typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Link to the updated stylesheet -->
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Font Face -->
+    <style>
+      @font-face {
+        font-family: "Fact";
+        src: url("fact-vf.woff2") format("woff2-variations");
+        font-weight: 200 900;
+        font-stretch: 50% 200%;
+      }
+    </style>
+  </head>
+  <body>
+    <main id="gif-generator">
+      <h1>Unite Students - Email Ticker Generator</h1>
+      <!-- Input Text -->
+      <section class="form-group">
+        <label for="input-text">Enter Your Text:</label>
+        <input
+          type="text"
+          id="input-text"
+          placeholder="Enter your text"
+          aria-label="Input text"
+        />
+        <!-- Formatting Options with Style Examples -->
+        <div id="format-options">
+          <p>Use markdown-like syntax to style your text:</p>
+          <ul>
+            <li>
+              <code>_thin_</code> for Thin style:
+              <span class="style-example thin">Example</span>
+            </li>
+            <li>
+              <code>**fat**</code> for Fat (bold) style:
+              <span class="style-example fat">Example</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Colorway Selection with Examples -->
+      <section id="colorway-selection" class="form-group">
+        <p>Select Colorway:</p>
+        <div class="colorway-options">
+          <!-- First Row -->
+          <div class="colorway-row">
+            <label>
+              <input type="radio" name="colorway" value="black-white-bg" />
+              <span
+                class="colorway-example white-background"
+                style="background-color: #ffffff; color: #2f2f2f"
+                >BLACK ON WHITE</span
+              >
+            </label>
+            <label>
+              <input type="radio" name="colorway" value="black-white" checked />
+              <span
+                class="colorway-example"
+                style="background-color: #2f2f2f; color: #ffffff"
+                >WHITE ON BLACK</span
+              >
+            </label>
+          </div>
+          <!-- Second Row -->
+          <div class="colorway-row">
+            <label>
+              <input type="radio" name="colorway" value="yellow-black" />
+              <span
+                class="colorway-example"
+                style="background-color: #ffdc00; color: #2f2f2f"
+                >BLACK ON YELLOW</span
+              >
+            </label>
+            <label>
+              <input type="radio" name="colorway" value="yellow-on-black" />
+              <span
+                class="colorway-example"
+                style="background-color: #2f2f2f; color: #ffdc00"
+                >YELLOW ON BLACK</span
+              >
+            </label>
+          </div>
+          <!-- Third Row -->
+          <div class="colorway-row">
+            <label>
+              <input type="radio" name="colorway" value="black-teal" />
+              <span
+                class="colorway-example"
+                style="background-color: #62bab7; color: #2f2f2f"
+                >BLACK ON TEAL</span
+              >
+            </label>
+            <div class="colorway-placeholder"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Separation Option -->
+      <section id="separation-option-control" class="form-group">
+        <label for="separation-option">Separation Option:</label>
+        <select id="separation-option" aria-label="Separation option selection">
+          <option value="none">No Separation</option>
+          <option value="gap" selected>Gap Between Repeats</option>
+          <option value="icon">Icon Between Repeats</option>
+        </select>
+      </section>
+
+      <!-- Advanced Controls Toggle -->
+      <button id="toggle-advanced-controls" class="btn">
+        Show Advanced Controls
+      </button>
+
+      <!-- Advanced Controls -->
+      <section id="advanced-controls" style="display: none">
+        <!-- Scroll Speed and Frame Delay Control -->
+        <div class="form-group form-row">
+          <div class="form-column">
+            <label for="scrollSpeed">Scroll Speed (px/frame):</label>
+            <input
+              type="number"
+              id="scrollSpeed"
+              min="1"
+              max="100"
+              value="30"
+              step="1"
+              aria-label="Scroll speed input"
+            />
+          </div>
+          <div class="form-column">
+            <label for="frameDelay">Frame Delay (ms):</label>
+            <input
+              type="number"
+              id="frameDelay"
+              min="10"
+              max="1000"
+              value="110"
+              step="10"
+              aria-label="Frame delay input"
+            />
+          </div>
+        </div>
+
+        <!-- Canvas Size Controls (Width and Height) -->
+        <div class="form-group form-row">
+          <div class="form-column">
+            <label for="canvasWidth">Width:</label>
+            <input
+              type="number"
+              id="canvasWidth"
+              min="100"
+              max="1280"
+              value="1280"
+              step="10"
+              aria-label="Canvas width input"
+            />
+          </div>
+          <div class="form-column">
+            <label for="canvasHeight">Height:</label>
+            <input
+              type="number"
+              id="canvasHeight"
+              min="20"
+              max="200"
+              value="100"
+              step="5"
+              aria-label="Canvas height input"
+            />
+          </div>
+        </div>
+
+        <!-- Vertical Offset Control -->
+        <div class="form-group form-row">
+          <div class="form-column">
+            <label for="verticalOffset">Vertical Offset (pixels):</label>
+            <input
+              type="number"
+              id="verticalOffset"
+              min="-100"
+              max="100"
+              value="16"
+              step="1"
+              aria-label="Vertical offset input"
+            />
+          </div>
+          <div class="form-column">
+            <!-- Empty column to make vertical offset input half-width -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading Indicator -->
+      <div id="loading-indicator" style="display: none">Rendering GIF...</div>
+
+      <!-- Canvas (hidden) -->
+      <canvas
+        id="canvas"
+        width="1280"
+        height="100"
+        style="display: none"
+      ></canvas>
+
+      <!-- Download Section -->
+      <div id="gif-preview"></div>
+      <div id="file-size" style="display: none">
+        File Size: <span id="file-size-value"></span>
+      </div>
+      <a id="download-link" style="display: none" download="generated.gif">
+        Download GIF
+      </a>
+    </main>
+
+    <!-- Include gif.js optimized -->
+    <script src="gif.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

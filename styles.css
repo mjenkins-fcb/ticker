@@ -44,6 +44,10 @@ select {
   border-radius: 4px;
 }
 
+input[type="text"] {
+  text-transform: uppercase;
+}
+
 input[type="number"] {
   max-width: 100%;
 }

@@ -39,7 +39,7 @@ function debounce(func, wait) {
 const debounceRenderGIF = debounce(loadResourcesAndRenderGIF, 500);
 
 // Event Listeners
-const inputElements = [
+[
   inputText,
   separationOption,
   scrollSpeedInput,
@@ -47,9 +47,7 @@ const inputElements = [
   canvasWidthInput,
   canvasHeightInput,
   verticalOffsetInput,
-];
-
-inputElements.forEach((element) => {
+].forEach((element) => {
   element.addEventListener("input", debounceRenderGIF);
 });
 
@@ -94,21 +92,11 @@ function loadResourcesAndRenderGIF() {
     return;
   }
 
-  loadFonts()
-    .then(() => {
-      fontsLoaded = true;
-      if (diamondImageLoaded) {
-        renderGIF(text);
-      }
-    })
-    .catch((error) => {
-      console.error("Error loading fonts:", error);
-      hideLoadingIndicator();
-      alert("Failed to load fonts. Please try again.");
-    });
+  loadFonts(text);
 }
 
-function loadFonts() {
+// Load fonts with specific variations
+function loadFonts(text) {
   // Define font widths and weights
   const fontStyles = {
     thin: { width: 50, weight: 340, family: "FactThin" },
@@ -116,20 +104,36 @@ function loadFonts() {
     fat: { width: 200, weight: 900, family: "FactFat" },
   };
 
-  const fontPromises = Object.values(fontStyles).map(
-    ({ weight, width, family }) => {
-      const fontFace = new FontFace(family, "url('fact-vf.woff2')", {
-        weight: weight.toString(),
-        style: "normal",
-        variationSettings: `"wght" ${weight}, "wdth" ${width}`,
-      });
-      return fontFace.load().then((loadedFont) => {
-        document.fonts.add(loadedFont);
-      });
-    }
-  );
+  // Create FontFace instances for each style
+  const fontFaces = [];
+  for (const style in fontStyles) {
+    const { width, weight, family } = fontStyles[style];
+    const fontFace = new FontFace(family, "url('fact-vf.woff2')", {
+      weight: weight.toString(),
+      stretch: `${width}%`,
+      style: "normal",
+      variationSettings: `"wght" ${weight}, "wdth" ${width}`,
+    });
+    fontFaces.push(fontFace.load());
+  }
 
-  return Promise.all(fontPromises);
+  // Load the fonts and add them to the document
+  Promise.all(fontFaces)
+    .then((loadedFonts) => {
+      loadedFonts.forEach((font) => document.fonts.add(font));
+      // Wait for fonts to be ready
+      document.fonts.ready.then(() => {
+        fontsLoaded = true;
+        if (diamondImageLoaded) {
+          renderGIF(text);
+        }
+      });
+    })
+    .catch((error) => {
+      console.error("Error loading fonts:", error);
+      hideLoadingIndicator();
+      alert("Failed to load fonts. Please try again.");
+    });
 }
 
 // Parse input text for styling
@@ -187,11 +191,14 @@ function renderGIF(text) {
   const frameDelay = parseFloat(frameDelayInput.value);
 
   // Get canvas dimensions
-  const gifWidth = Math.min(parseInt(canvasWidthInput.value, 10), 1280);
-  const gifHeight = Math.min(parseInt(canvasHeightInput.value, 10), 200);
+  const gifWidth = parseInt(canvasWidthInput.value, 10);
+  const gifHeight = parseInt(canvasHeightInput.value, 10);
 
-  canvas.width = gifWidth;
-  canvas.height = gifHeight;
+  // Limit canvas dimensions to prevent excessively large GIFs
+  const maxGifWidth = 1280;
+  const maxGifHeight = 200;
+  canvas.width = Math.min(gifWidth, maxGifWidth);
+  canvas.height = Math.min(gifHeight, maxGifHeight);
 
   // Adjust font size based on canvas height
   const fontSize = canvas.height * 0.95;
@@ -214,9 +221,9 @@ function renderGIF(text) {
 
   // Define font styles
   const fontStyles = {
-    thin: { width: 50, weight: 340, family: "Fact" },
-    normal: { width: 74, weight: 572, family: "Fact" },
-    fat: { width: 200, weight: 900, family: "Fact" },
+    thin: { family: "FactThin" },
+    normal: { family: "FactNormal" },
+    fat: { family: "FactFat" },
   };
 
   const iconPadding = 20; // Padding around the icon
@@ -235,15 +242,22 @@ function renderGIF(text) {
   const totalFrames = Math.ceil(contentWidth / scrollSpeed);
 
   for (let i = 0; i < totalFrames; i++) {
-    renderFrame({
-      index: i,
-      totalFrames,
-      scrollSpeed,
-      ctx,
-      canvas,
-      bgColor,
-      textColor,
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const scrollPosition = -(i * scrollSpeed) % contentWidth;
+
+    // Get the vertical offset from the user input
+    const verticalOffset = parseInt(verticalOffsetInput.value, 10) || 0;
+    const yPosition = canvas.height - verticalOffset;
+
+    drawStyledTextParts({
       parts,
+      ctx,
+      scrollPosition,
+      yPosition,
+      textColor,
       fontSize,
       gap,
       fontStyles,
@@ -251,6 +265,7 @@ function renderGIF(text) {
       iconPadding,
       contentWidth,
       addSeparator,
+      canvasWidth: canvas.width,
     });
 
     gif.addFrame(ctx, {
@@ -297,15 +312,10 @@ function getSeparationSettings(separationValue) {
   let gap = 0;
   let addSeparator = false;
 
-  switch (separationValue) {
-    case "gap":
-      gap = 20;
-      break;
-    case "icon":
-      addSeparator = true;
-      break;
-    default:
-      break;
+  if (separationValue === "gap") {
+    gap = 20;
+  } else if (separationValue === "icon") {
+    addSeparator = true;
   }
 
   return { gap, addSeparator };
@@ -348,6 +358,7 @@ function calculateContentWidth(
 // Draw styled text parts on the canvas
 function drawStyledTextParts(params) {
   const {
+    parts,
     ctx,
     scrollPosition,
     yPosition,
@@ -373,7 +384,7 @@ function drawStyledTextParts(params) {
     let tempX = currentX;
 
     // Draw the text parts
-    params.parts.forEach((part) => {
+    parts.forEach((part) => {
       ctx.fillStyle = textColor;
       const { family } = fontStyles[part.style];
       ctx.font = `${fontSize}px ${family}`;
@@ -406,50 +417,6 @@ function drawStyledTextParts(params) {
 function drawSeparator(ctx, x, y, width, height, color, image) {
   ctx.fillStyle = color;
   ctx.drawImage(image, x, y - height, width, height);
-}
-
-// Render a single frame
-function renderFrame(params) {
-  const {
-    index,
-    scrollSpeed,
-    ctx,
-    canvas,
-    bgColor,
-    textColor,
-    parts,
-    fontSize,
-    gap,
-    fontStyles,
-    diamondImage,
-    iconPadding,
-    contentWidth,
-    addSeparator,
-  } = params;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const scrollPosition = -(index * scrollSpeed) % contentWidth;
-  const verticalOffset = parseInt(verticalOffsetInput.value, 10) || 0;
-  const yPosition = canvas.height - verticalOffset;
-
-  drawStyledTextParts({
-    ctx,
-    scrollPosition,
-    yPosition,
-    textColor,
-    fontSize,
-    gap,
-    fontStyles,
-    diamondImage,
-    iconPadding,
-    contentWidth,
-    addSeparator,
-    parts,
-    canvasWidth: canvas.width,
-  });
 }
 
 // Handle GIF generation completion

@@ -355,6 +355,25 @@ function calculateContentWidth(
   return contentWidth;
 }
 
+// Recolor the separator icon to match the text color
+function recolorIcon(image, width, height, color) {
+  // Create an off-screen canvas
+  const offCanvas = document.createElement("canvas");
+  offCanvas.width = width;
+  offCanvas.height = height;
+  const offCtx = offCanvas.getContext("2d");
+
+  // Draw the icon onto the off-screen canvas
+  offCtx.drawImage(image, 0, 0, width, height);
+
+  // Apply a color overlay using the source-in blend mode
+  offCtx.globalCompositeOperation = "source-in";
+  offCtx.fillStyle = color;
+  offCtx.fillRect(0, 0, width, height);
+
+  return offCanvas;
+}
+
 // Draw styled text parts on the canvas
 function drawStyledTextParts(params) {
   const {
@@ -395,15 +414,18 @@ function drawStyledTextParts(params) {
     // Add gap or separator
     if (addSeparator) {
       tempX += iconPadding;
-      drawSeparator(
-        ctx,
-        tempX,
-        yPosition,
+
+      // Recolor the icon to match the text color
+      const recoloredIcon = recolorIcon(
+        diamondImage,
         scaledDiamondWidth,
         scaledDiamondHeight,
-        textColor,
-        diamondImage
+        textColor
       );
+
+      // Draw the recolored icon onto the main canvas
+      ctx.drawImage(recoloredIcon, tempX, yPosition - scaledDiamondHeight);
+
       tempX += scaledDiamondWidth + iconPadding;
     } else {
       tempX += gap;
@@ -411,12 +433,6 @@ function drawStyledTextParts(params) {
 
     currentX += contentWidth;
   }
-}
-
-// Draw separator icon
-function drawSeparator(ctx, x, y, width, height, color, image) {
-  ctx.fillStyle = color;
-  ctx.drawImage(image, x, y - height, width, height);
 }
 
 // Handle GIF generation completion

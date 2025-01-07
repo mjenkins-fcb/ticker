@@ -70,7 +70,7 @@ let fontsLoaded = false;
 // Diamond image loading
 let diamondImageLoaded = false;
 const diamondImage = new Image();
-diamondImage.src = "diamond.svg";
+diamondImage.src = "star.svg";
 diamondImage.onload = () => {
   diamondImageLoaded = true;
   if (fontsLoaded) {
